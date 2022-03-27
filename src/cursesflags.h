@@ -1,16 +1,17 @@
 // https://github.com/ziglang/zig/issues/2070
 #include <curses.h>
 
-static const int MY_A_STANDOUT = A_STANDOUT;
+// zig can't translate macro definitions of these functions
+// so that we need function wrappers for them.
+void get_yx   (WINDOW *win, int *y, int *x) { getyx   (win, *y, *x); }
+void get_paryx(WINDOW *win, int *y, int *x) { getparyx(win, *y, *x); }
+void get_begyx(WINDOW *win, int *y, int *x) { getbegyx(win, *y, *x); }
+void get_maxyx(WINDOW *win, int *y, int *x) { getmaxyx(win, *y, *x); }
 
-// i couldn't get an array to work
-static const int MY_COLOR_PAIR_1 = COLOR_PAIR(1);
-static const int MY_COLOR_PAIR_2 = COLOR_PAIR(2);
-static const int MY_COLOR_PAIR_3 = COLOR_PAIR(3);
-static const int MY_COLOR_PAIR_4 = COLOR_PAIR(4);
-static const int MY_COLOR_PAIR_5 = COLOR_PAIR(5);
-static const int MY_COLOR_PAIR_6 = COLOR_PAIR(6);
-static const int MY_COLOR_PAIR_7 = COLOR_PAIR(7);
-static const int MY_COLOR_PAIR_8 = COLOR_PAIR(8);
-static const int MY_COLOR_PAIR_9 = COLOR_PAIR(9);
-static const int MY_COLOR_PAIR_10 = COLOR_PAIR(10);
+#include <errno.h>
+
+// zig can't address errno global variable for some reason.
+int get_errno() {
+  return errno;
+}
+

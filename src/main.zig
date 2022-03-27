@@ -16,7 +16,8 @@ pub fn main() !void {
 
     //var screen = try Screen(void).init(alloc, "screen", "/dev/pts/11", "/dev/pts/11");
     //var screen = try Screen(ColorPairs).init(alloc, "screen", "/dev/pts/5", "/dev/pts/5");
-    var screen = try Screen(ColorPairs).init(alloc, "screen-256color", "/dev/pts/5", "/dev/pts/5");
+    //var screen = try Screen(ColorPairs).init(alloc, "screen-256color", "/dev/pts/5", "/dev/pts/5");
+    var screen = try Screen(ColorPairs).init(alloc, "screen-256color", null, null);
     defer screen._deinit();
     var window = screen.std_window();
     defer window._deinit();
@@ -68,6 +69,4 @@ pub fn main() !void {
     try window.refresh();
 
     _ = try window.getch();
-
-    _ = window.getmaxy();
 }

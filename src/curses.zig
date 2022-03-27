@@ -6,26 +6,208 @@ const c = @cImport({
     @cInclude("stdio.h");
 });
 
-const Error = error.CursesError;
+pub const CursesError = error {
+    CursesInternal,
+    FileOpenFail,
+    VoidColor,
+    ColorNotStarted,
+    ImmutableDefault,
+};
 
 fn checkError(res: c_int) !c_int {
     if (res == c.ERR) {
-        return Error;
+        return error.CursesInternal;
     }
     return res;
 }
 
 fn check(res: c_int) !void{
     if (res == c.ERR) {
-        return Error;
+        return error.CursesInternal;
     }
 }
 
-pub const KEY_RESIZE: c_int = c.KEY_RESIZE;
-pub const KEY_LEFT: c_int = c.KEY_LEFT;
-pub const KEY_RIGHT: c_int = c.KEY_RIGHT;
-pub const KEY_UP: c_int = c.KEY_UP;
-pub const KEY_DOWN: c_int = c.KEY_DOWN;
+fn cfileopen(alloc: std.mem.Allocator,
+    path: []const u8, comptime mode: [:0]const u8
+) ?*c.FILE {
+    const cpath = alloc.dupeZ(u8, path) catch return null;
+    defer alloc.free(cpath);
+    const res = c.fopen(cpath.ptr, mode);
+    return @ptrCast(?*c.FILE, res);
+}
+
+fn cfileclose(file: *c.FILE) !void {
+    if (c.fclose(file) != 0) return error.FileOpenFail;
+}
+
+fn map(
+    ox: anytype,
+    comptime T: type,
+    comptime f: fn (
+        y: @typeInfo(@TypeOf(ox)).Optional.child
+    //) @typeInfo(@TypeOf(f)).Fn.return_type.?
+    ) T,
+) @typeInfo(@TypeOf(f)).Fn.return_type {
+    return if (ox) |x| f(x) else ox;
+}
+
+pub const KEY = struct {
+    pub const BREAK       = c.KEY_BREAK;      //Break key
+    pub const DOWN        = c.KEY_DOWN;       //The four arrow keys ...
+    pub const UP          = c.KEY_UP;
+    pub const LEFT        = c.KEY_LEFT;
+    pub const RIGHT       = c.KEY_RIGHT;
+    pub const HOME        = c.KEY_HOME;       //Home key (upward+left arrow)
+    pub const BACKSPACE   = c.KEY_BACKSPACE;  //Backspace
+    pub const F0          = c.KEY_F0;         //Function keys; space for 64 keys is reserved.
+    pub const F1          = c.KEY_F1;         //For 0 <= n <= 63
+    pub const F2          = c.KEY_F2;
+    pub const F3          = c.KEY_F3;
+    pub const F4          = c.KEY_F4;
+    pub const F5          = c.KEY_F5;
+    pub const F6          = c.KEY_F6;
+    pub const F7          = c.KEY_F7;
+    pub const F8          = c.KEY_F8;
+    pub const F9          = c.KEY_F9;
+    pub const F10         = c.KEY_F10;
+    pub const F11         = c.KEY_F11;
+    pub const F12         = c.KEY_F12;
+    pub const F13         = c.KEY_F13;
+    pub const F14         = c.KEY_F14;
+    pub const F15         = c.KEY_F15;
+    pub const F16         = c.KEY_F16;
+    pub const F17         = c.KEY_F17;
+    pub const F18         = c.KEY_F18;
+    pub const F19         = c.KEY_F19;
+    pub const F20         = c.KEY_F20;
+    pub const F21         = c.KEY_F21;
+    pub const F22         = c.KEY_F22;
+    pub const F23         = c.KEY_F23;
+    pub const F24         = c.KEY_F24;
+    pub const F25         = c.KEY_F25;
+    pub const F26         = c.KEY_F26;
+    pub const F27         = c.KEY_F27;
+    pub const F28         = c.KEY_F28;
+    pub const F29         = c.KEY_F29;
+    pub const F30         = c.KEY_F30;
+    pub const F31         = c.KEY_F31;
+    pub const F32         = c.KEY_F32;
+    pub const F33         = c.KEY_F33;
+    pub const F34         = c.KEY_F34;
+    pub const F35         = c.KEY_F35;
+    pub const F36         = c.KEY_F36;
+    pub const F37         = c.KEY_F37;
+    pub const F38         = c.KEY_F38;
+    pub const F39         = c.KEY_F39;
+    pub const F40         = c.KEY_F40;
+    pub const F41         = c.KEY_F41;
+    pub const F42         = c.KEY_F42;
+    pub const F43         = c.KEY_F43;
+    pub const F44         = c.KEY_F44;
+    pub const F45         = c.KEY_F45;
+    pub const F46         = c.KEY_F46;
+    pub const F47         = c.KEY_F47;
+    pub const F48         = c.KEY_F48;
+    pub const F49         = c.KEY_F49;
+    pub const F50         = c.KEY_F50;
+    pub const F51         = c.KEY_F51;
+    pub const F52         = c.KEY_F52;
+    pub const F53         = c.KEY_F53;
+    pub const F54         = c.KEY_F54;
+    pub const F55         = c.KEY_F55;
+    pub const F56         = c.KEY_F56;
+    pub const F57         = c.KEY_F57;
+    pub const F58         = c.KEY_F58;
+    pub const F59         = c.KEY_F59;
+    pub const F60         = c.KEY_F60;
+    pub const F61         = c.KEY_F61;
+    pub const F62         = c.KEY_F62;
+    pub const F63         = c.KEY_F63;
+    pub const DL          = c.KEY_DL;         //Delete line
+    pub const IL          = c.KEY_IL;         //Insert line
+    pub const DC          = c.KEY_DC;         //Delete character
+    pub const IC          = c.KEY_IC;         //Insert char or enter insert mode
+    pub const EIC         = c.KEY_EIC;        //Exit insert char mode
+    pub const CLEAR       = c.KEY_CLEAR;      //Clear screen
+    pub const EOS         = c.KEY_EOS;        //Clear to end of screen
+    pub const EOL         = c.KEY_EOL;        //Clear to end of line
+    pub const SF          = c.KEY_SF;         //Scroll 1 line forward
+    pub const SR          = c.KEY_SR;         //Scroll 1 line backward (reverse)
+    pub const NPAGE       = c.KEY_NPAGE;      //Next page
+    pub const PPAGE       = c.KEY_PPAGE;      //Previous page
+    pub const STAB        = c.KEY_STAB;       //Set tab
+    pub const CTAB        = c.KEY_CTAB;       //Clear tab
+    pub const CATAB       = c.KEY_CATAB;      //Clear all tabs
+    pub const ENTER       = c.KEY_ENTER;      //Enter or send
+    pub const SRESET      = c.KEY_SRESET;     //Soft (partial) reset
+    pub const RESET       = c.KEY_RESET;      //Reset or hard reset
+
+    pub const PRINT       = c.KEY_PRINT;      //Print or copy
+    pub const LL          = c.KEY_LL;         //Home down or bottom (lower left)
+    pub const A1          = c.KEY_A1;         //Upper left of keypad
+    pub const A3          = c.KEY_A3;         //Upper right of keypad
+    pub const B2          = c.KEY_B2;         //Center of keypad
+    pub const C1          = c.KEY_C1;         //Lower left of keypad
+    pub const C3          = c.KEY_C3;         //Lower right of keypad
+    pub const BTAB        = c.KEY_BTAB;       //Back tab key
+    pub const BEG         = c.KEY_BEG;        //Beg(inning) key
+    pub const CANCEL      = c.KEY_CANCEL;     //Cancel key
+    pub const CLOSE       = c.KEY_CLOSE;      //Close key
+    pub const COMMAND     = c.KEY_COMMAND;    //Cmd (command) key
+    pub const COPY        = c.KEY_COPY;       //Copy key
+    pub const CREATE      = c.KEY_CREATE;     //Create key
+    pub const END         = c.KEY_END;        //End key
+    pub const EXIT        = c.KEY_EXIT;       //Exit key
+    pub const FIND        = c.KEY_FIND;       //Find key
+    pub const HELP        = c.KEY_HELP;       //Help key
+    pub const MARK        = c.KEY_MARK;       //Mark key
+    pub const MESSAGE     = c.KEY_MESSAGE;    //Message key
+    pub const MOUSE       = c.KEY_MOUSE;      //Mouse event occurred
+    pub const MOVE        = c.KEY_MOVE;       //Move key
+    pub const NEXT        = c.KEY_NEXT;       //Next object key
+    pub const OPEN        = c.KEY_OPEN;       //Open key
+    pub const OPTIONS     = c.KEY_OPTIONS;    //Options key
+    pub const PREVIOUS    = c.KEY_PREVIOUS;   //Previous object key
+    pub const REDO        = c.KEY_REDO;       //Redo key
+    pub const REFERENCE   = c.KEY_REFERENCE;  //Ref(erence) key
+    pub const REFRESH     = c.KEY_REFRESH;    //Refresh key
+    pub const REPLACE     = c.KEY_REPLACE;    //Replace key
+    pub const RESIZE      = c.KEY_RESIZE;     //Screen resized
+    pub const RESTART     = c.KEY_RESTART;    //Restart key
+    pub const RESUME      = c.KEY_RESUME;     //Resume key
+    pub const SAVE        = c.KEY_SAVE;       //Save key
+    pub const SBEG        = c.KEY_SBEG;       //Shifted beginning key
+    pub const SCANCEL     = c.KEY_SCANCEL;    //Shifted cancel key
+    pub const SCOMMAND    = c.KEY_SCOMMAND;   //Shifted command key
+    pub const SCOPY       = c.KEY_SCOPY;      //Shifted copy key
+    pub const SCREATE     = c.KEY_SCREATE;    //Shifted create key
+    pub const SDC         = c.KEY_SDC;        //Shifted delete char key
+    pub const SDL         = c.KEY_SDL;        //Shifted delete line key
+    pub const SELECT      = c.KEY_SELECT;     //Select key
+    pub const SEND        = c.KEY_SEND;       //Shifted end key
+    pub const SEOL        = c.KEY_SEOL;       //Shifted clear line key
+    pub const SEXIT       = c.KEY_SEXIT;      //Shifted exit key
+    pub const SFIND       = c.KEY_SFIND;      //Shifted find key
+    pub const SHELP       = c.KEY_SHELP;      //Shifted help key
+    pub const SHOME       = c.KEY_SHOME;      //Shifted home key
+    pub const SIC         = c.KEY_SIC;        //Shifted insert key
+    pub const SLEFT       = c.KEY_SLEFT;      //Shifted left arrow key
+    pub const SMESSAGE    = c.KEY_SMESSAGE;   //Shifted message key
+    pub const SMOVE       = c.KEY_SMOVE;      //Shifted move key
+    pub const SNEXT       = c.KEY_SNEXT;      //Shifted next key
+    pub const SOPTIONS    = c.KEY_SOPTIONS;   //Shifted options key
+    pub const SPREVIOUS   = c.KEY_SPREVIOUS;  //Shifted prev key
+    pub const SPRINT      = c.KEY_SPRINT;     //Shifted print key
+    pub const SREDO       = c.KEY_SREDO;      //Shifted redo key
+    pub const SREPLACE    = c.KEY_SREPLACE;   //Shifted replace key
+    pub const SRIGHT      = c.KEY_SRIGHT;     //Shifted right arrow key
+    pub const SRSUME      = c.KEY_SRSUME;     //Shifted resume key
+    pub const SSAVE       = c.KEY_SSAVE;      //Shifted save key
+    pub const SSUSPEND    = c.KEY_SSUSPEND;   //Shifted suspend key
+    pub const SUNDO       = c.KEY_SUNDO;      //Shifted undo key
+    pub const SUSPEND     = c.KEY_SUSPEND;    //Suspend key
+    pub const UNDO        = c.KEY_UNDO;       //Undo key
+};
 
 const CursorVisibility = enum(c_int) {
     Invisible   = 0,
@@ -92,53 +274,45 @@ pub fn Screen(comptime PAIR_ENUM: type) type {
             outfile: ?[]const u8,
             infile: ?[]const u8,
         ) !Self {
-            var buf:  ?[:0]const u8 = null;
-            var term: ?[*:0]const u8 = undefined;
-            if (term_type) |term_string| {
-                buf = try alloc.dupeZ(u8, term_string);
-                term = buf.?.ptr;
-            } else {
-                term = null;
-            }
 
-            defer if (buf) |ptr| alloc.free(ptr);
+            var term = if (term_type) |term_string|
+                try alloc.dupeZ(u8, term_string)
+            else null;
+            defer if (term) |t| alloc.free(t);
 
-            const ofd = if (outfile) |f| blk: {
-                const str = try alloc.dupeZ(u8, f);
-                defer alloc.free(str);
-                const res = c.fopen(str.ptr, "wb");
-                if (@ptrToInt(res) == 0) return Error;
-                break :blk @ptrToInt(res);
-            } else 0;
+            const ofd = if (outfile) |path|
+                cfileopen(alloc, path, "wb")
+            else null;
+            errdefer if (ofd) |f| { _=c.fclose(f); };
 
-            const ifd = if (infile) |f| blk: {
-                const str = try alloc.dupeZ(u8, f);
-                defer alloc.free(str);
-                const res = c.fopen(str.ptr, "rb");
-                if (@ptrToInt(res) == 0) return Error;
-                break :blk @ptrToInt(res);
-            } else 0;
+            const ifd = if (infile) |path|
+                cfileopen(alloc, path, "rb")
+            else null;
+            errdefer if (ifd) |f| { _=c.fclose(f); };
 
             const cscreen = c.newterm(
-                @ptrCast([*c]const u8, term),
-                @intToPtr(*allowzero c.FILE, ofd),
-                @intToPtr(*allowzero c.FILE, ifd),
+                @ptrCast(
+                    [*c]const u8,
+                    if (term) |t| t.ptr else null
+                ),
+                @ptrCast(*allowzero c.FILE, ofd),
+                @ptrCast(*allowzero c.FILE, ifd),
             );
 
-            const screen = @ptrCast(?*c.SCREEN, cscreen) orelse return Error;
+            const screen = @ptrCast(?*c.SCREEN, cscreen)
+                orelse return error.CursesInteral;
 
             return Self {
                 .scr = screen, .alloc = alloc,
-                .ofd = @intToPtr(?*c.FILE,ofd),
-                .ifd = @intToPtr(?*c.FILE,ifd),
+                .ofd = ofd, .ifd = ifd,
             };
         }
 
         pub fn deinit(self: *Self) !void {
             try self.putback();
             c.delscreen(self.scr);
-            if (c.fclose(self.ofd) != 0) return Error;
-            if (c.fclose(self.ifd) != 0) return Error;
+            if (self.ofd) |f| try cfileclose(f);
+            if (self.ifd) |f| try cfileclose(f);
             // TODO set to null?
         }
 
@@ -199,31 +373,34 @@ pub fn Screen(comptime PAIR_ENUM: type) type {
         }
 
         pub fn start_color(_: Self) !void {
-            if (PAIR_ENUM == void) {
-                return Error; // TODO more specific error type?
-            }
+            if (PAIR_ENUM == void) return error.VoidColor;
             try check(c.start_color());
         }
 
+        // TODO not tested yet
         pub fn register_color(_: Self, id: PalleteCell, r: c_short, g: c_short, b: c_short) !void {
-            if (PAIR_ENUM == void) {
-                return Error; // TODO more specific error type?
-            }
+            if (PAIR_ENUM == void) return error.VoidColor;
+            if (c.COLORS == 0) return error.ColorNotStarted;
+
             const color_id = @intCast(c_int, @enumToInt(id));
+            if (c.COLORS <= color_id) return error.OutOfColorRange;
             try check(c.init_color(color_id, r, g, b));
         }
 
         pub fn register_colorpair(_: Self, id: PAIR_ENUM, fg: PalleteCell, bg: PalleteCell) !void {
-            if (PAIR_ENUM == void) return Error; // TODO more specific error type?
-
+            if (PAIR_ENUM == void) return error.VoidColor;
+            if (c.COLORS == 0) return error.ColorNotStarted;
             const pair_id =
                 if (PAIR_ENUM == c_short) id
-                else @intCast(c_short, @enumToInt(id))
-                ;
-            const fg_color = @intCast(c_short, @enumToInt(fg));
-            const bg_color = @intCast(c_short, @enumToInt(bg));
-            // FIXME
-            //std.debug.assert(pair_id < c.COLOR_PAIRS);
+                else @intCast(c_short, @enumToInt(id)) ;
+            if (pair_id == 0) return error.ImmutableDefault;
+            if (c.COLOR_PAIRS <= pair_id) return error.OutOfColorPairRange;
+
+            const fg_color = @enumToInt(fg);
+            const bg_color = @enumToInt(bg);
+            if (c.COLORS <= fg_color) return error.OutOfColorRange;
+            if (c.COLORS <= bg_color) return error.OutOfColorRange;
+
             return check(c.init_pair(pair_id, fg_color, bg_color));
         }
 
@@ -274,7 +451,8 @@ pub fn Window(comptime PAIR_ENUM: type) type {
 
         pub fn init(alloc: std.mem.Allocator, x: u16, y: u16, w: u16, h: u16) !Self {
             const cwindow = c.newwin(h, w, y, x);
-            const window = @ptrCast(?*c.SCREEN, cwindow) orelse return Error;
+            const window = @ptrCast(?*c.SCREEN, cwindow)
+                orelse return error.CursesInternal;
             return Self{ .win = window, .alloc = alloc };
         }
 
@@ -336,23 +514,47 @@ pub fn Window(comptime PAIR_ENUM: type) type {
         }
 
         pub fn color_set(self: Self, cp: PAIR_ENUM) !void {
-            if (PAIR_ENUM == void) return Error; // TODO more specific error type?
+            if (PAIR_ENUM == void) return error.VoidColor;
+            if (c.COLORS == 0) return error.ColorNotStarted;
 
             const pair_id =
                 if (PAIR_ENUM == c_short) cp
-                else @intCast(c_short, @enumToInt(cp))
-                ;
+                else @intCast(c_short, @enumToInt(cp)) ;
+            if (c.COLOR_PAIRS <= pair_id) return error.OutOfColorPairRange;
             const x = c.COLOR_PAIR(@intCast(c_int, pair_id));
             return check(c.wattr_on(self.win, @intCast(c_uint, x), null));
         }
 
         pub fn getch(self: Self) !c_int {
-            // Err when interrupted, timeout, win is null
+            // FIXME ref states wgetch returns Err when interrupted
+            // or timeout, (the former) in turn, sets errno to EINTR.
+            // but i coundn't let it return Err on interrupt,
+            // for some reason. so leaving the case unhandled.
+            // a bugreport in future may address this problem and
+            // let me know how to produce such cases.
             return checkError(c.wgetch(self.win));
         }
 
+        pub fn botRight(self: Self) struct { x: u16, y: u16 } {
+            var x: c_int = undefined;
+            var y: c_int = undefined;
+            c.get_maxyx(self.win, &y, &x);
+            return .{ .x = @intCast(u16, x), .y = @intCast(u16, y) };
+        }
 
-        // only for compatibility ??
+        pub fn topLeft(self: Self) struct { x: u16, y: u16 } {
+            var x: c_int = undefined;
+            var y: c_int = undefined;
+            c.get_begyx(self.win, &y, &x);
+            return .{ .x = @intCast(u16, x), .y = @intCast(u16, y) };
+        }
+
+        //pub fn getmaxy(self: Self) u16 { return @intCast(u16, c.getmaxy(self.win)); }
+        //pub fn getmaxx(self: Self) u16 { return @intCast(u16, c.getmaxx(self.win)); }
+
+        // these methods are provided as is.
+        // no abstraction, protection is provided.
+        // for those who want to access curses API as it were in C.
 
         pub fn mvaddstr(self: Self, y: u16, x: u16, str: []const u8) !void {
             const cstr = try self.alloc.dupeZ(u8, str);
@@ -375,13 +577,6 @@ pub fn Window(comptime PAIR_ENUM: type) type {
             const res = @call(.{}, c.wprintw, .{self.win, cstr.ptr} ++ args);
             return check(res);
         }
-
-
-        // TODO: don't use "legacy" functions like getmaxy()?
-        // currently zig can't handle macro definition of getmaxyx
-        pub fn getmaxy(self: Self) u16 { return @intCast(u16, c.getmaxy(self.win)); }
-        pub fn getmaxx(self: Self) u16 { return @intCast(u16, c.getmaxx(self.win)); }
-
 
         pub fn attr_on(self: Self, attr: Attr) !void {
             return check(c.wattr_on(self.win, attr.attr, null));
