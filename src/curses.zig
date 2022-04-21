@@ -1,5 +1,9 @@
 
 const std = @import("std");
+
+pub const painter = @import("painter.zig");
+
+
 const c = @cImport({
     @cInclude("cursesflags.h");
     @cInclude("curses.h");
@@ -525,14 +529,22 @@ pub fn Window(comptime PAIR_ENUM: type) type {
             return check(c.wattr_on(self.win, @intCast(c_uint, x), null));
         }
 
-        pub fn getch(self: Self) !c_int {
+        // getch returns null if timeout (wait is positive)
+        // non blocking input (wait is 0)
+        // blocking input (wait is negative)
+        pub fn timeout(self: Self, wait: i32) void {
+            c.wtimeout(self.win, @intCast(c_int, wait));
+        }
+
+        pub fn getch(self: Self) ?c_int {
             // FIXME ref states wgetch returns Err when interrupted
             // or timeout, (the former) in turn, sets errno to EINTR.
             // but i coundn't let it return Err on interrupt,
             // for some reason. so leaving the case unhandled.
             // a bugreport in future may address this problem and
             // let me know how to produce such cases.
-            return checkError(c.wgetch(self.win));
+            const ret = c.wgetch(self.win);
+            return if (ret == c.ERR) null else ret;
         }
 
         pub fn botRight(self: Self) struct { x: u16, y: u16 } {
