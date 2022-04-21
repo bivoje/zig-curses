@@ -137,3 +137,12 @@ A slightly modified file `resolve1.py` is used in second & third pass.
 `matching3` is indeed the final mapping file without a duplication.
 
 This is going to be in zig-curses library code.
+
+
+## Notes
+to render colors properly on tmux you should start tmux session with `-2` option given.
+https://unix.stackexchange.com/a/1098
+
+you can see the 256 color coverage by
+https://askubuntu.com/a/821163
+
